@@ -7,13 +7,15 @@
 #include "linked-list.h"
 
 
-
+//Meto de que itera pel fitxer aeroports.csv en busca d'IATAcodes d'aeroports
+//i inserta aquests ISOCodes com a claus d'un arbre
 int aeroports_process(char* filename,rb_tree * tree){
+    //declaracio de variables
     FILE *fp;          
     int num_aeroports;  
     char str[100];       
-    int iata_length;
-    node_data *n_data;
+    int iata_length; //guarda la longitud del iata_code
+    node_data *n_data; //apunta a una lista indexada amb clau aeroport origen
 
     fp = fopen(filename , "r");
     if(fp == NULL) {
@@ -21,27 +23,26 @@ int aeroports_process(char* filename,rb_tree * tree){
       return(-1);
     }
     if( fgets (str, 100, fp)!=NULL ){
-        num_aeroports= atoi(str);              
+        num_aeroports = atoi(str);              
     
     }
     while( fgets (str, 100, fp)!=NULL ) {
         
         iata_length = strlen(str);                    
-
+        //tractem l'ultim caracter de la fila
         if (iata_length > 0 && str[iata_length-1] == '\n') {  
             str[--iata_length] = '\0';
         }       
         n_data = find_node(tree, str);
         //comprovem que no existeixi el aeroport per tal d'evitar duplicats
         if(n_data==NULL){            
-            if ((n_data = malloc(sizeof(node_data)))==0)return report_error();           
+            if ((n_data = malloc(sizeof(n_data*)))==0)return report_error();           
             // This is the key by which the node is indexed in the tree 
             if ((n_data->key =(char *)malloc(iata_length*sizeof(char)))==0)return report_error();            
             strcpy(n_data->key, str);  
-            if ((n_data->list = malloc(sizeof(list)))==0)return report_error();
+            if ((n_data->list = malloc(sizeof(n_data->list*)))==0)return report_error();
             insert_node(tree, n_data);
         }
-        n_data = find_node(tree, str);
     }
 }
 
