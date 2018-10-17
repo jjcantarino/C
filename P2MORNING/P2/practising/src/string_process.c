@@ -36,11 +36,11 @@ int aeroports_process(char* filename,rb_tree * tree){
         n_data = find_node(tree, str);
         //comprovem que no existeixi el aeroport per tal d'evitar duplicats
         if(n_data==NULL){            
-            if ((n_data = malloc(sizeof(n_data*)))==0)return report_error();           
+            if ((n_data = malloc(sizeof(*n_data)))==0)return report_error();           
             // This is the key by which the node is indexed in the tree 
             if ((n_data->key =(char *)malloc(iata_length*sizeof(char)))==0)return report_error();            
             strcpy(n_data->key, str);  
-            if ((n_data->list = malloc(sizeof(n_data->list*)))==0)return report_error();
+            if ((n_data->list = malloc(sizeof(*n_data->list)))==0)return report_error();
             insert_node(tree, n_data);
         }
     }
