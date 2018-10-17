@@ -44,11 +44,13 @@ static int compare_key1_equal_key2(LIST_KEY_TYPE key1, LIST_KEY_TYPE key2)
 
   rc = 0;
 
-  if (key1 == key2)
+  if (strcmp(key1, key2)==0)
     rc = 1;
 
   return rc;
 }
+
+
 
 /**
  * 
@@ -82,7 +84,7 @@ void insert_list(list *l, list_data *data)
 {
   list_item *tmp, *x;
 
-  x = malloc(sizeof(list_item));
+  x = malloc(sizeof(list_item*));
 
   if (x == 0) {
     printf("insufficient memory (insertItem)\n");

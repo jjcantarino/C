@@ -1,0 +1,6 @@
+Aeroport Origen: IAD Aeroport Desti: MDW Retard mig: 6.125
+Aeroport Origen: IAD Aeroport Desti: MCO Retard mig: -14.167
+Aeroport Origen: IAD Aeroport Desti: LAS Retard mig: 2.333
+Aeroport Origen: IAD Aeroport Desti: TPA Retard mig: -15.375
+Entra 
+MAX airport : LAS times: 54  

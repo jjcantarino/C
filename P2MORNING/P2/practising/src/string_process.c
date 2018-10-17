@@ -96,37 +96,27 @@ int dades_process(char* filename, rb_tree * tree){
               if(word_length > 0){
                   if(str[j] == '\n'){
                       str[j] = '\0';
+                      column = 0;
                   }
-                  if(column==15){//delay         
+                  if(column==14){//delay         
                       if ((str_delay = (char *)malloc(word_length*sizeof(char)))==0)return report_error();
                       strncpy(str_delay, str+first_idx, word_length);          
                       if(str_delay[0]=='N'){
                           current_delay = 0;
-                          printf("retard: %s \n",str_delay);
 
                       }else{
                           current_delay = atoi(str_delay);
-                          printf("retard: %i \n",current_delay);
                       }
-                  }
+                   }
                   else if(column==16){                
                       if ((current_origin = (char *)malloc(word_length*sizeof(char)))==0)return report_error();
-                      strncpy(current_origin, str+first_idx, word_length);                       
+                      strncpy(current_origin, str+first_idx, word_length);          
                   }
                   else if(column==17){ //destination               
                       if ((current_dest = (char *)malloc(word_length*sizeof(char)))==0)return report_error();
-                      strncpy(current_dest, str+first_idx, word_length);                       
-        
-                      printf("desti: %s \n",current_dest);
-                      printf("desti: %s \n",current_origin);
-                      if ((n_data = malloc(sizeof(node_data)))==0)return report_error();           
-                      /*
-                        TO DO: NOT TO BE COREDUMPED WHEN TRYING TO FIND NODE
-
-                        WHAT HAPPENS? NULL TREE? 
-                        WRONG DATATYPE? WHY CANT?
-
-                      */
+                      strncpy(current_dest, str+first_idx, word_length);                  
+                
+                      if ((n_data = malloc(sizeof(node_data)))==0)return report_error();  
                       if( tree != NULL){
 
                           n_data = find_node(tree, current_origin);
@@ -137,8 +127,6 @@ int dades_process(char* filename, rb_tree * tree){
                               if(linked_data != NULL){
                                   linked_data->minutes = linked_data->minutes + current_delay;
                                   linked_data->num_flights++;
-                                  for (int k = 0; k < linked_data)
-
                               }
                               else{
 
@@ -146,9 +134,9 @@ int dades_process(char* filename, rb_tree * tree){
                                 
                                   linked_data->key = current_dest;
                                   linked_data->minutes = current_delay;
-                                  linked_data->num_flights = 0;
+                                  linked_data->num_flights = 1;
+                                  insert_list(n_data->list, linked_data);
                               }
-                              insert_list(n_data->list, linked_data);
                           } 
                            else {
                             printf("NOT FOUND: %s \n", current_origin);
@@ -224,10 +212,7 @@ int dades_process(char* filename, rb_tree * tree){
    
    //Important: tancar fitxer i liberar l'espai de cada vector
     fclose(fp);
-    if(tree!=NULL){
-      delete_tree(tree);
-      free(tree);
-    }
+
     return(0);
 }
 

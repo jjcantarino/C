@@ -80,6 +80,9 @@ typedef struct list_ {
  *
  */
 
+list_item *get_first();
+
+
 void init_list(list *l);
 void insert_list(list *l, list_data *data);
 list_data *find_list(list *l, LIST_KEY_TYPE key);
