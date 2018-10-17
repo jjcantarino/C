@@ -314,6 +314,7 @@ static void delete_tree_recursive(node *x)
     if (x->left != NIL)
         delete_tree_recursive(x->left);
 
+    delete_list(x->data->list);
     free_node_data(x->data);
     free(x);
 }
