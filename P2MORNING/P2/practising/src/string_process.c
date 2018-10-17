@@ -123,7 +123,7 @@ int dades_process(char* filename, rb_tree * tree){
                         if ((current_dest = (char *)malloc(word_length*sizeof(char)))==0)return report_error();
                         strncpy(current_dest, str+first_idx, word_length);                  
                   
-                        if ((n_data = malloc(sizeof(*node_data)))==0)return report_error();  
+                        if ((n_data = malloc(sizeof(*n_data)))==0)return report_error();  
                         if( tree != NULL){
 
                             n_data = find_node(tree, current_origin);
@@ -140,7 +140,7 @@ int dades_process(char* filename, rb_tree * tree){
                                 else{
                                     //sino, caldra crear la llista amb clau current_dest     
 
-                                    if ((linked_data = malloc(sizeof(*list_data)))==0)return report_error();
+                                    if ((linked_data = malloc(sizeof(*linked_data)))==0)return report_error();
                                   
                                     linked_data->key = current_dest;
                                     linked_data->minutes = current_delay;
