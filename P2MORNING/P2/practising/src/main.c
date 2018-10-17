@@ -24,7 +24,8 @@ int main(int argc, char *argv[])
 
     float retard = 0.;
     int max_times = 0;
-    if((char * airport = (char *)malloc(3*sizeof(char)))==0) return report_error();   
+    char * airport;
+    if((airport = (char *)malloc(3*sizeof(char)))==0) return report_error();   
 
     //construccio dels nodes origen de l'arbre
     if(strstr(aeroportsFilename,"aeroport")!=NULL){
