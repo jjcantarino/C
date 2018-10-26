@@ -1,4 +1,4 @@
-default: myprog
+default: myprog 
 
 # To create the executable file myprog we need the object files
 
@@ -6,20 +6,20 @@ default: myprog
 
 
 myprog: main.o string_process.o linked-list.o red-black-tree.o
-	gcc main.o string_process.o linked-list.o red-black-tree.o -o myprog -lm
+	gcc -g main.o string_process.o linked-list.o red-black-tree.o -o myprog -lm
 
 
 main.o: main.c
-	gcc -c main.c -o main.o
+	gcc -g -c main.c -o main.o
 
 string_process.o: string_process.c  
-	gcc -c string_process.c -o string_process.o
+	gcc -g -c string_process.c -o string_process.o
 
 linked-list.o: linked-list.c
-	gcc -c linked-list.c -o linked-list.o	
+	gcc -g -c linked-list.c -o linked-list.o	
 
 red-black-tree.o:  red-black-tree.c
-	gcc -c red-black-tree.c -o red-black-tree.o
+	gcc -g -c red-black-tree.c -o red-black-tree.o
 
 
 

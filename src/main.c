@@ -7,6 +7,20 @@
 #include "red-black-tree.h"
 #include "linked-list.h"
 
+int get_max_inflight(node *node, char* airport, int max_times){
+    if(node!=NIL){
+        if(node->right != NIL)
+            max_times=get_max_inflight(node->right, airport, max_times);
+        if(node->left != NIL)
+            max_times=get_max_inflight(node->left, airport, max_times);
+        if(max_times < node->data->list->num_items){
+            max_times = node->data->list->num_items;
+            strcpy(airport, node->data->key);
+        }
+    }
+    return max_times;    
+}
+
 int main(int argc, char *argv[])
 {  
     //guardem els arguments rebuts per parametre
@@ -25,7 +39,6 @@ int main(int argc, char *argv[])
     float retard = 0.;
     int max_times = 0;
     char * airport;
-    if((airport = (char *)malloc(3*sizeof(char)))==0) return report_error();   
 
     //construccio dels nodes origen de l'arbre
     if(strstr(aeroportsFilename,"aeroport")!=NULL){
@@ -38,7 +51,6 @@ int main(int argc, char *argv[])
     //si trobem el node origen
 
     //Busqueda dels retards promitjos per un aeroport origen
-    if ((n_data = malloc(sizeof(node_data)))==0)return report_error();  
     n_data = find_node(tree, origin);
     if (n_data == NULL){ 
         printf("Aeroport %s no trobat al fitxer csv \n", origin);
@@ -46,10 +58,7 @@ int main(int argc, char *argv[])
     }
     //si la dimensio del 3er parametre es difernet de 3 no trobara cap aeroport origin
     if(strlen(origin) == 3){
-        if ((n_data = malloc(sizeof(node_data)))==0)return report_error();  
-        n_data = find_node(tree, origin);
         if (n_data != NULL) {
-            if ((current_item = malloc(sizeof(list_item)))==0)return report_error();  
             current_item = n_data->list->first;
             while(current_item != NULL){
                 //print retard for each
@@ -64,34 +73,20 @@ int main(int argc, char *argv[])
     //Busqueda del aeroport origen amb mes destinacions
 
     }    
-    if(tree!=NULL){
-        if(tree->root!=NULL){
-            printf("Entra \n");
-            airport = tree->root->data->key;
+    if(tree != NULL){
+        if(tree->root != NULL){
+            if((airport = (char *)malloc(1+strlen(tree->root->data->key)*sizeof(char)))==0) return report_error();   
+            strcpy(airport, tree->root->data->key);  
             max_times = get_max_inflight(tree->root, airport, max_times);
         }
     }
     printf("L'aeroport amb mes destinacions es : %s \n amb  %d  destinacions \n", airport, max_times);
-  
-    if(current_item!=NULL)free(current_item);
-    if(airport!=NULL)free(current_item);
-    if(n_data!=NULL)free(n_data);
-    if(tree!=NULL){
+    
+    
+    if(tree != NULL){
       delete_tree(tree);
-      free(tree);
-    }   
+    }         
+    free(airport);
+    free(tree);
     return(0);
-}
-int get_max_inflight(node *node, char* airport, int max_times){
-    if(node!=NIL){
-        if(node->right != NIL)
-            max_times=get_max_inflight(node->right, airport, max_times);
-        if(node->left != NIL)
-            max_times=get_max_inflight(node->left, airport, max_times);
-        if(max_times < node->data->list->num_items){
-            max_times = node->data->list->num_items;
-            strcpy(airport, node->data->key);
-        }
-    }
-    return max_times;    
 }

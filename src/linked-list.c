@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * We include the linked-list.h header. Note the double
@@ -85,7 +86,7 @@ void insert_list(list *l, list_data *data)
 {
   list_item *tmp, *x;
 
-  x = malloc(sizeof(list_item*));
+  x = malloc(sizeof(*x));
 
   if (x == 0) {
     printf("insufficient memory (insertItem)\n");
@@ -173,6 +174,7 @@ void delete_list(list *l)
 
   l->num_items = 0;
   l->first = NULL;
+  free(l);
 }
 
 
