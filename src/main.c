@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdint.h>
 
 #include "string_process.h"
 #include "red-black-tree.h"
@@ -45,6 +46,96 @@ int create_tree(rb_tree * tree, char* aeroportsFilename, char* dadesFilename){
         aeroports_process(aeroportsFilename, tree);
         dades_process(dadesFilename, tree);
 }
+
+int load_tree(rb_tree * tree, char* treeFilename){
+
+        FILE *fp;          
+        int32_t int_input;
+        fp = fopen(treeFilename , "rb");
+        if(fp == NULL) {
+            perror("Error opening file");
+            return(-1);
+        }
+        fread(&int_input, sizeof(int32_t), 1, fp);
+        if(int_input == MAGIC_NUMBER)
+            printf("Save and Load succeded %#08x \n", int_input);        
+        
+        fread(&int_input, sizeof(int32_t), 1, fp);
+        if(int_input != 0)
+            printf("Loaded num nodes %d \n", int_input);     
+        while(fread)
+        load_tree_recursive(tree->root, fp);
+    
+        fclose(fp);
+}
+
+
+int load_tree_recursive(node *node, FILE *fp){
+    if(node!=NIL){
+        if(node->right != NIL)
+            load_tree_recursive(node->right, fp);
+        if(node->left != NIL)
+            load_tree_recursive(node->left, fp);
+
+        fread(node->data->key,sizeof(char),strlen(node->data->key)-1,fp);
+        fread(node->data->list->num_items, sizeof(int), 1, fp);
+        //load_list_recursive(node->data->list->first, fp);
+        //save_list
+    }
+}
+
+int load_list_recursive(list_item *node, FILE *fp){
+    if(node!=NIL){
+        if(node->next != NIL)
+            load_list_recursive(node->next, fp);
+        
+        fread(node->data->key, sizeof(char), strlen(node->data->key)-1, fp);
+        fread(node->data->num_flights, sizeof(int32_t), 1, fp);
+        fread(node->data->minutes, sizeof(float), 1, fp);
+    }
+}
+
+
+int save_list_recursive(list_item *node, FILE *fp){
+    if(node!=NIL){
+        if(node->next != NIL)
+            save_list_recursive(node->next, fp);
+        
+        fwrite(&node->data->key, sizeof(char), strlen(node->data->key)-1, fp);
+        fwrite(&node->data->num_flights, sizeof(int32_t), 1, fp);
+        fwrite(&node->data->minutes, sizeof(float), 1, fp);
+    } 
+}
+
+int save_tree_recursive(node *node, FILE *fp){
+    if(node!=NIL){
+        if(node->right != NIL)
+            save_tree_recursive(node->right, fp);
+        if(node->left != NIL)
+            save_tree_recursive(node->left, fp);
+
+        fwrite(&node->data->key,sizeof(char),strlen(node->data->key)-1,fp);
+        fwrite(&node->data->list->num_items, sizeof(int), 1, fp);
+        //save_list_recursive(node->data->list->first, fp);
+        //save_list
+    }
+}
+
+int save_tree(rb_tree * tree, char* treeFilename){
+        FILE *fp;          
+        fp = fopen(treeFilename , "wb");
+        int32_t int_input = MAGIC_NUMBER;
+        if(fp == NULL) {
+            perror("Error opening file");
+            return(-1);
+        }
+        fwrite(&int_input, sizeof(int32_t), 1, fp);
+        printf("TREE NUM NODES: %d", tree->num_nodes);
+        fwrite(&tree->num_nodes, sizeof(int32_t), 1, fp);
+        save_tree_recursive(tree->root, fp);
+        fclose(fp);
+}
+
 /*
     Busqueda del aeroport origen amb mes destinacions
 
@@ -66,8 +157,6 @@ int get_max_inflight(rb_tree * tree){
     }
 
 }
-
-
 
 /*
     Busqueda dels retards promitjos per un aeroport origen
@@ -181,6 +270,13 @@ int main(int argc, char **argv)
                     fgets(str1, MAXLINE, stdin);
                     str1[strlen(str1)-1]=0;
 
+                    if(strlen(str1)<3)
+                        strcpy(str1, "./tree");    
+
+                    save_tree(tree, str1);
+                    clean_memory(tree);
+                    arbre_creat = false;
+
                     /* Falta codi */
                 }
                 else
@@ -202,7 +298,14 @@ int main(int argc, char **argv)
                 if(arbre_creat==false){
                     printf("Introdueix nom del fitxer que conte l'arbre: ");
                     fgets(str1, MAXLINE, stdin);
-                    str1[strlen(str1)-1]=0;
+                    str1[strlen(str1)-1]=0;       
+
+                    if(strlen(str1)<3)
+                        strcpy(str1, "./tree");    
+
+                    load_tree(tree, str1);
+                    //arbre_creat = true;                
+
                 }
 
                 /* Falta codi */
