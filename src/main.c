@@ -18,6 +18,7 @@
 #define LOAD 3
 #define INFO 4
 #define EXIT 5
+#define IATA_SIZE 3
 
 int get_max_inflight_recursive(node *node, char* airport, int max_times){
     if(node!=NIL){
@@ -50,60 +51,79 @@ int create_tree(rb_tree * tree, char* aeroportsFilename, char* dadesFilename){
 int load_tree(rb_tree * tree, char* treeFilename){
 
         FILE *fp;          
-        int32_t int_input;
+        int32_t int_input; 
+        char *current_origin;
+        char *current_dest;
+        int num_dest;
+        float current_delay;
+        int current_num_flights;
+        
+        int32_t num_nodes;
         fp = fopen(treeFilename , "rb");
         if(fp == NULL) {
             perror("Error opening file");
             return(-1);
         }
+        init_tree(tree);   
+       
         fread(&int_input, sizeof(int32_t), 1, fp);
         if(int_input == MAGIC_NUMBER)
             printf("Save and Load succeded %#08x \n", int_input);        
         
-        fread(&int_input, sizeof(int32_t), 1, fp);
-        if(int_input != 0)
-            printf("Loaded num nodes %d \n", int_input);     
-        while(fread)
-        load_tree_recursive(tree->root, fp);
-    
+        fread(&num_nodes, sizeof(int32_t), 1, fp);
+        //per cada node
+        for (int32_t i = 0; i < num_nodes; i++){
+         
+            if ((current_origin = (char *)malloc(1+IATA_SIZE*sizeof(char)))==0)return report_error();
+            current_origin[IATA_SIZE]= '\0'; 
+             
+            fread(current_origin, sizeof(char), IATA_SIZE, fp);          
+            //current_origin[IATA_SIZE]= '\0'; 
+            create_tree_node(current_origin, tree);
+            
+            fread(&num_dest, sizeof(int), 1, fp);          
+            
+            for (int j = 0; j < num_dest ; j++){
+
+                if ((current_dest = (char *)malloc(1+IATA_SIZE*sizeof(char)))==0)return report_error();
+                    
+                fread(current_dest, sizeof(char), IATA_SIZE, fp);          
+                current_dest[IATA_SIZE]= '\0'; 
+                fread(&current_num_flights, sizeof(int), 1, fp);          
+                fread(&current_delay, sizeof(float), 1, fp);
+            
+                update_list_entry(tree, current_origin, current_dest, current_delay, current_num_flights);
+
+            }
+            free(current_origin);
+        }
+        
         fclose(fp);
 }
 
 
-int load_tree_recursive(node *node, FILE *fp){
-    if(node!=NIL){
-        if(node->right != NIL)
-            load_tree_recursive(node->right, fp);
-        if(node->left != NIL)
-            load_tree_recursive(node->left, fp);
+int save_list(list *l, FILE *fp){
 
-        fread(node->data->key,sizeof(char),strlen(node->data->key)-1,fp);
-        fread(node->data->list->num_items, sizeof(int), 1, fp);
-        //load_list_recursive(node->data->list->first, fp);
-        //save_list
-    }
-}
+    list_item *current;
 
-int load_list_recursive(list_item *node, FILE *fp){
-    if(node!=NIL){
-        if(node->next != NIL)
-            load_list_recursive(node->next, fp);
+    current = l->first;
+
+    float delay = 0.0;
+
+    while (current != NULL)
+    {
         
-        fread(node->data->key, sizeof(char), strlen(node->data->key)-1, fp);
-        fread(node->data->num_flights, sizeof(int32_t), 1, fp);
-        fread(node->data->minutes, sizeof(float), 1, fp);
-    }
-}
-
-
-int save_list_recursive(list_item *node, FILE *fp){
-    if(node!=NIL){
-        if(node->next != NIL)
-            save_list_recursive(node->next, fp);
+        fwrite(current->data->key, sizeof(char), strlen(current->data->key), fp);
+        fwrite(&current->data->num_flights, sizeof(int32_t), 1, fp);
         
-        fwrite(&node->data->key, sizeof(char), strlen(node->data->key)-1, fp);
-        fwrite(&node->data->num_flights, sizeof(int32_t), 1, fp);
-        fwrite(&node->data->minutes, sizeof(float), 1, fp);
+        if(current->data->num_flights > 0 )
+            delay = current->data->minutes;
+        else
+            delay = 0.0;
+        
+        fwrite(&delay, sizeof(float), 1, fp);
+        
+        current = current->next;
     } 
 }
 
@@ -114,9 +134,11 @@ int save_tree_recursive(node *node, FILE *fp){
         if(node->left != NIL)
             save_tree_recursive(node->left, fp);
 
-        fwrite(&node->data->key,sizeof(char),strlen(node->data->key)-1,fp);
+        fwrite(node->data->key,sizeof(char),strlen(node->data->key),fp);
         fwrite(&node->data->list->num_items, sizeof(int), 1, fp);
-        //save_list_recursive(node->data->list->first, fp);
+        //printf("ORigin %s NUM DEST: %int",node->data->key, node->data->list->num_items);
+        
+        save_list(node->data->list, fp);
         //save_list
     }
 }
@@ -129,8 +151,8 @@ int save_tree(rb_tree * tree, char* treeFilename){
             perror("Error opening file");
             return(-1);
         }
+        printf("\n Writing current tree in %s file", treeFilename);
         fwrite(&int_input, sizeof(int32_t), 1, fp);
-        printf("TREE NUM NODES: %d", tree->num_nodes);
         fwrite(&tree->num_nodes, sizeof(int32_t), 1, fp);
         save_tree_recursive(tree->root, fp);
         fclose(fp);
@@ -244,14 +266,14 @@ int main(int argc, char **argv)
                 if(arbre_creat==true)
                     clean_memory(tree);
 
-                printf("Introdueix fitxer que conte llistat d'aeroports: \n Prem enter per buscarlo a ./aeroports/aeroports.csv");
+                printf("Introdueix fitxer que conte llistat d'aeroports: \n Prem enter per buscarlo a ./aeroports/aeroports.csv\n");
                 fgets(str1, MAXLINE, stdin);
                 str1[strlen(str1)-1]=0;
                 
                 if(strlen(str1)<3)
                     strcpy(str1, "./aeroports/aeroports.csv");                    
 
-                printf("Introdueix fitxer de dades: \n Prem enter per buscarlo a ./dades/dades.csv");
+                printf("Introdueix fitxer de dades: \n Prem enter per buscarlo a ./dades/dades.csv\n");
                 fgets(str2, MAXLINE, stdin);
                 str2[strlen(str2)-1]=0;
 
@@ -266,7 +288,7 @@ int main(int argc, char **argv)
             case SAVE:
                 
                 if(arbre_creat==true){
-                    printf("Introdueix el nom de fitxer en el qual es desara l'arbre: ");
+                    printf("Introdueix el nom de fitxer en el qual es desara l'arbre: \nO polsa enter per agafar el per defecte\n");
                     fgets(str1, MAXLINE, stdin);
                     str1[strlen(str1)-1]=0;
 
@@ -274,10 +296,6 @@ int main(int argc, char **argv)
                         strcpy(str1, "./tree");    
 
                     save_tree(tree, str1);
-                    clean_memory(tree);
-                    arbre_creat = false;
-
-                    /* Falta codi */
                 }
                 else
                     printf("No existeix cap arbre creat!");    
@@ -286,7 +304,7 @@ int main(int argc, char **argv)
 
             case LOAD:
                 if(arbre_creat==true){
-                    printf("Ja tens un arbre creat, es perdrà, vols continuar? Y/N");
+                    printf("Ja tens un arbre creat, es perdrà, vols continuar? (Y/N)\n");
                     fgets(str1, MAXLINE, stdin);
                     str1[strlen(str1)-1]=0;
 
@@ -296,7 +314,7 @@ int main(int argc, char **argv)
                     }
                 }
                 if(arbre_creat==false){
-                    printf("Introdueix nom del fitxer que conte l'arbre: ");
+                    printf("Introdueix nom del fitxer que conte l'arbre: \nO polsa enter per agafar el per defecte\n");
                     fgets(str1, MAXLINE, stdin);
                     str1[strlen(str1)-1]=0;       
 
@@ -304,7 +322,7 @@ int main(int argc, char **argv)
                         strcpy(str1, "./tree");    
 
                     load_tree(tree, str1);
-                    //arbre_creat = true;                
+                    arbre_creat = true;                
 
                 }
 
@@ -314,7 +332,7 @@ int main(int argc, char **argv)
 
             case INFO:
                 //WE ASK FOR INPUT
-                printf("Introdueix aeroport per cercar retard o polsa enter per saber l'aeroport amb mes destins: ");
+                printf("Introdueix aeroport per cercar retard o polsa enter per saber l'aeroport amb mes destins: \n");
                 fgets(str1, MAXLINE, stdin);
                 str1[strlen(str1)-1]=0;
 
