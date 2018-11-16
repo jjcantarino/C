@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "controller.h"
 #include "red-black-tree.h"
+#include <pthread.h>
 
 #define MAXLINE 200
 #define true 1
@@ -42,6 +43,7 @@ int menu()
     return opcio;
 }
 
+
 /**
  * 
  *  Main procedure
@@ -53,15 +55,23 @@ int main(int argc, char **argv)
     //guardem els arguments rebuts per parametre
     //declaracio de variables
     rb_tree * tree;
-
+    thread_args * args;
     char str1[MAXLINE], str2[MAXLINE];
     int opcio;
     int arbre_creat = false;
+    pthread_t ntid;
 
+    if ((args = (thread_args *) malloc(sizeof(thread_args)))==0) return report_error();
     if ((tree = (rb_tree *) malloc(sizeof(rb_tree)))==0) return report_error();
+    //https://linux.die.net/man/3/pthread_create
+    args->tree = tree;
+    args->str1 = str1;
+    args->str2 = str2;
 
     if (argc != 1)
         printf("Opcions de la linia de comandes ignorades\n");
+    
+    printids("fil principal:");
 
     do {
         opcio = menu();
@@ -71,8 +81,9 @@ int main(int argc, char **argv)
 
         switch (opcio) {
             case CREATE:
+            
                 if(arbre_creat==true)
-                    clean_memory(tree);
+                    clean_memory(args);
 
                 printf("Introdueix fitxer que conte llistat d'aeroports: \n Prem enter per buscarlo a ./aeroports/aeroports.csv\n");
                 fgets(str1, MAXLINE, stdin);
@@ -87,9 +98,11 @@ int main(int argc, char **argv)
 
                 if(strlen(str2)<3)
                 strcpy(str2,"./dades/dades.csv");
-                
-                create_tree(tree, str1, str2);
+
+                if(pthread_create(&ntid, NULL, create_tree, args)!=0) return report_error();
+            
                 arbre_creat = true;
+                sleep(1);
 
                 break;
 
@@ -117,7 +130,7 @@ int main(int argc, char **argv)
                     str1[strlen(str1)-1]=0;
 
                     if(strcmp(str1,"Y")==0){
-                        clean_memory(tree);
+                        clean_memory(args);
                         arbre_creat = false;
                     }
                 }
@@ -160,7 +173,7 @@ int main(int argc, char **argv)
 
                 //IF TREE CREATED WE MUST CLEAN MEMORY ASSOCIATED
 
-                if(arbre_creat==true)clean_memory(tree);
+                if(arbre_creat==true)clean_memory(args);
                 arbre_creat=false;
 
                 break;
@@ -172,5 +185,6 @@ int main(int argc, char **argv)
     }
     while (opcio != 5);
     free(tree);
+    free(args);
     return 0;
 }

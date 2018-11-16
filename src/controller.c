@@ -3,6 +3,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include "controller.h"
+#include <pthread.h>
+#include <unistd.h>
+
+
+void *thr_fn(void *arg)
+{
+  printids("nou fil: ");
+  return((void *)0);
+}
+
+void printids(const char *s)
+{
+  pid_t pid;
+  pthread_t tid;
+
+  pid = getpid();
+  tid = pthread_self();
+  printf("%s pid %u tid %u (0x%x)\n", s, (unsigned int)pid,
+      (unsigned int)tid, (unsigned int)tid);
+}
+
 
 /*
     CREATES A NODE TO BE INSERTED IN THE TREE
@@ -107,23 +128,28 @@ int get_max_inflight_recursive(node *node, char* airport, int max_times){
 
 */
 
-int clean_memory(rb_tree * tree){
-    if(tree != NULL){
-      delete_tree(tree);
-    }         
+int clean_memory(thread_args *args){
+    if(args->tree != NULL)
+        delete_tree(args->tree);
 }
 
 /*
     CREATE TREE (FORMATTED DATA, OTHERWISE WOULD BE LOAD)
 
+int create_tree(rb_tree * , char*, char*);
 */
-int create_tree(rb_tree * tree, char* aeroportsFilename, char* dadesFilename){
-        //construccio dels nodes origen de l'arbre
-        //reserva de memoria per l'arbre, (si no hi ha espai sortim)
-        //inicialitzacio del tree
-        init_tree(tree);   
-        aeroports_process(aeroportsFilename, tree);
-        dades_process(dadesFilename, tree);
+
+void *create_tree(void * arg){
+    //construccio dels nodes origen de l'arbre
+    //reserva de memoria per l'arbre, (si no hi ha espai sortim)
+    //inicialitzacio del tree
+    printf("TID: %i \n", pthread_self());
+    struct thread_args *args = arg;
+
+    init_tree(args->tree);   
+    aeroports_process(args->str1, args->tree);
+    dades_process(args->str2, args->tree);
+  return((void *)0);
 }
 
 

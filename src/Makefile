@@ -6,7 +6,7 @@ default: myprog
 
 
 myprog: main.o linked-list.o red-black-tree.o controller.o unformatted_data.o formatted_data.o
-	gcc -g main.o linked-list.o red-black-tree.o controller.o formatted_data.o unformatted_data.o -o myprog -lm
+	gcc -g main.o linked-list.o red-black-tree.o controller.o formatted_data.o unformatted_data.o -o myprog -lm -lpthread
 
 
 main.o: main.c

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "controller.h"
+#include <pthread.h>
 
 
 //Meto de que itera pel fitxer aeroports.csv en busca d'IATAcodes d'aeroports
