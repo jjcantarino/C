@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "string_process.h"
-#include "red-black-tree.h"
-#include "linked-list.h"
+#include "controller.h"
 
 
 //Meto de que itera pel fitxer aeroports.csv en busca d'IATAcodes d'aeroports
@@ -39,52 +37,6 @@ int aeroports_process(char* filename,rb_tree * tree){
     fclose(fp);
 }
 
-int create_tree_node(char* key, rb_tree * tree){
-    
-    node_data *n_data; //apunta a una lista indexada amb clau aeroport origen
-    //comprovem que no existeixi el aeroport per tal d'evitar duplicats
-    if ((n_data = malloc(sizeof(*n_data)))==0)return report_error();           
-    // This is the key by which the node is indexed in the tree 
-    if ((n_data->key =(char *)malloc(1+strlen(key)*sizeof(char)))==0)return report_error();            
-    strcpy(n_data->key, key);  
-    if ((n_data->list = malloc(sizeof(list_data)))==0)return report_error();
-    init_list(n_data->list);
-    insert_node(tree, n_data);
- }
-
-int update_list_entry(rb_tree * tree, char* origin, char* dest, float delay, int param_flights){
-    
-    node_data *n_data;
-    list_data * linked_data;
-
-    if( tree != NULL){
-
-        n_data = find_node(tree, origin);
-
-        if (n_data != NULL) {
-            //if list_data
-            linked_data = find_list(n_data->list, dest);
-            //si existeix llista, vol dir que ja s'ha inicialitzat la llista desti
-            if(linked_data != NULL){
-                //llavors, nomes afegim el delay i incrementem el numero de flights ORIGEN - DESTI
-                linked_data->minutes = linked_data->minutes + delay;
-                linked_data->num_flights = linked_data->num_flights + param_flights;
-                free(dest);
-            }
-            else{
-                
-                //sino, caldra crear la llista amb clau current_dest     
-                if ((linked_data = malloc(sizeof(*linked_data)))==0)return report_error();
-                linked_data->key = dest;
-                linked_data->minutes = delay;
-                linked_data->num_flights = param_flights;
-
-                insert_list(n_data->list, linked_data);
-            }
-        } 
-    }
-
-}
 
 //processa l'arxiu dades.csv corresponent a vols
 int dades_process(char* filename, rb_tree * tree){
@@ -168,9 +120,4 @@ int dades_process(char* filename, rb_tree * tree){
     }
     fclose(fp);
     return(0);
-}
-//funcio utilitzada continuament per retornar error de malloc
-int report_error(){
-   printf("Not enough space, exiting \n");
-   return (-1);
 }

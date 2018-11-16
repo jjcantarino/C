@@ -5,15 +5,21 @@ default: myprog
 #creating ejectuables
 
 
-myprog: main.o string_process.o linked-list.o red-black-tree.o
-	gcc -g main.o string_process.o linked-list.o red-black-tree.o -o myprog -lm
+myprog: main.o linked-list.o red-black-tree.o controller.o unformatted_data.o formatted_data.o
+	gcc -g main.o linked-list.o red-black-tree.o controller.o formatted_data.o unformatted_data.o -o myprog -lm
 
 
 main.o: main.c
 	gcc -g -c main.c -o main.o
 
-string_process.o: string_process.c  
-	gcc -g -c string_process.c -o string_process.o
+formatted_data.o: formatted_data.c  
+	gcc -g -c formatted_data.c -o formatted_data.o
+
+unformatted_data.o: unformatted_data.c  
+	gcc -g -c unformatted_data.c -o unformatted_data.o
+
+controller.o: controller.c  
+	gcc -g -c controller.c -o controller.o
 
 linked-list.o: linked-list.c
 	gcc -g -c linked-list.c -o linked-list.o	
