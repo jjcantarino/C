@@ -99,11 +99,10 @@ int main(int argc, char **argv)
                 if(strlen(str2)<3)
                 strcpy(str2,"./dades/dades.csv");
 
-                if(pthread_create(&ntid, NULL, create_tree, args)!=0) return report_error();
+                create_tree(args);
             
                 arbre_creat = true;
-                sleep(1);
-
+                
                 break;
 
             case SAVE:

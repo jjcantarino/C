@@ -6,7 +6,7 @@
 #include "controller.h"
 
 
-int dades_process(char*, rb_tree * tree);
+int dades_process(FILE*, rb_tree *, pthread_mutex_t);
 int aeroports_process(char*, rb_tree * tree);
 int report_error();
 

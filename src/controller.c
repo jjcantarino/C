@@ -4,8 +4,8 @@
 #include <string.h>
 #include "controller.h"
 #include <pthread.h>
+#include <sys/time.h>
 #include <unistd.h>
-
 
 void *thr_fn(void *arg)
 {
@@ -38,6 +38,7 @@ int create_tree_node(char* key, rb_tree * tree){
     if ((n_data->key =(char *)malloc(1+strlen(key)*sizeof(char)))==0)return report_error();            
     strcpy(n_data->key, key);  
     if ((n_data->list = malloc(sizeof(list_data)))==0)return report_error();
+    n_data->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
     init_list(n_data->list);
     insert_node(tree, n_data);
  }
@@ -57,6 +58,8 @@ int update_list_entry(rb_tree * tree, char* origin, char* dest, float delay, int
 
         if (n_data != NULL) {
             //if list_data
+
+            pthread_mutex_lock(&n_data->mutex);
             linked_data = find_list(n_data->list, dest);
             //si existeix llista, vol dir que ja s'ha inicialitzat la llista desti
             if(linked_data != NULL){
@@ -75,6 +78,7 @@ int update_list_entry(rb_tree * tree, char* origin, char* dest, float delay, int
 
                 insert_list(n_data->list, linked_data);
             }
+            pthread_mutex_unlock(&n_data->mutex);
         } 
     }
 
@@ -139,20 +143,69 @@ int clean_memory(thread_args *args){
 int create_tree(rb_tree * , char*, char*);
 */
 
-void *create_tree(void * arg){
-    //construccio dels nodes origen de l'arbre
-    //reserva de memoria per l'arbre, (si no hi ha espai sortim)
-    //inicialitzacio del tree
+int create_tree(thread_args *args){
+    
+    FILE *fp;
+    pthread_t ntid_f1, ntid_f2;
+    void *ret1;
+    void* ret2;
+    int i = 0;
+    char str[100];      
     printf("TID: %i \n", pthread_self());
-    struct thread_args *args = arg;
 
+    //INIT TREE
     init_tree(args->tree);   
+
+    //TREE CREATION
     aeroports_process(args->str1, args->tree);
-    dades_process(args->str2, args->tree);
+
+    printf("Filename: %s \n", args->str2);
+
+    args->mutex_fp = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+
+    fp = fopen(args->str2 , "r");
+    args->fp = fp;
+    printf("Filename: %s  FP: %d \n", args->str2, args->fp);
+
+    if(args->fp == NULL) {
+        perror("Error opening file");
+        return(-1);
+    }
+    fgets (str, 100, args->fp);//ignorem capçalera
+
+    struct timeval tv1, tv2;
+    gettimeofday(&tv1, NULL);
+
+    while (ret1 != 1 && ret2 != 1){
+        if(pthread_create(&ntid_f1, NULL, fill_tree, args)!=0) return report_error();
+        if(pthread_create(&ntid_f2, NULL, fill_tree, args)!=0) return report_error();
+        pthread_join(ntid_f1, &ret1);
+        pthread_join(ntid_f2, &ret2);
+    }
+
+    /* Tiempo cronologico */
+    gettimeofday(&tv2, NULL);
+
+    /* Tiempo para la creacion del arbol */
+    printf("Tiempo para crear el arbol: %f segundos\n",
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
+
+    fclose(fp);
+   // if(pthread_create(&ntid_f2, NULL, fill_tree, args)!=0) return report_error();
+   
+
   return((void *)0);
 }
 
+void *fill_tree(void * arg){
 
+
+    struct thread_args *args = arg;
+    //printids("Fil secundari : ");
+    dades_process(args->fp, args->tree, args->mutex_fp);
+
+}
 /*
     GIVEN AN ORIGIN SEARCHS FOR ITS AVERAGE DELAY
 */

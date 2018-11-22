@@ -4,8 +4,7 @@
 #include <string.h>
 #include "controller.h"
 #include <pthread.h>
-
-
+#define MAX_ROW_READ 100
 //Meto de que itera pel fitxer aeroports.csv en busca d'IATAcodes d'aeroports
 //i inserta aquests ISOCodes com a claus d'un arbre
 int aeroports_process(char* filename,rb_tree * tree){
@@ -40,9 +39,8 @@ int aeroports_process(char* filename,rb_tree * tree){
 
 
 //processa l'arxiu dades.csv corresponent a vols
-int dades_process(char* filename, rb_tree * tree){
-     //declaracio de variables
-    FILE *fp;            
+int dades_process(FILE * fp, rb_tree * tree, pthread_mutex_t mutex_fp){
+
     char str[100];      
     char * current_origin;
     char * current_dest;
@@ -55,14 +53,12 @@ int dades_process(char* filename, rb_tree * tree){
     int column = 0;
     int current_column = 0;
     int nombre_elements = 0, i = 0;
-    // Obrim el fitxer amb filename rebut per parametre
-    fp = fopen(filename , "r");
-
-    if(fp == NULL) {
-        perror("Error opening file");
-        return(-1);
-    }
-    while( fgets (str, 100, fp)!=NULL ) {
+    int row = 0;
+    int fgetsout = 0;
+    
+    /* Tiempo cronologico */
+    fgetsout = fgets (str, 100, fp);
+    while( fgetsout != NULL &&  row <= MAX_ROW_READ) {
         //convertim a integer
         line_length = strlen(str);                    
         begin_word = 0; 
@@ -113,12 +109,28 @@ int dades_process(char* filename, rb_tree * tree){
                         update_list_entry(tree, current_origin, current_dest, current_delay, 1);
                         free(current_origin);
                     }
-                }
+                }   
                 begin_word = j + 1;
                 column++;
             }
         }
+        row++;
+        pthread_mutex_lock(&mutex_fp);
+        if(fp != NULL){
+            fgetsout = fgets (str, 100, fp);
+        }
+        else 
+            fgetsout=NULL;
+
+        if(fgetsout==NULL){
+            pthread_mutex_unlock(&mutex_fp);
+            pthread_exit(1);
+        }
+        pthread_mutex_unlock(&mutex_fp);
     }
-    fclose(fp);
+
+    //if the process terminated because fgets was null
+    //it means we reached EOF, so we must end threading
+
     return(0);
 }
