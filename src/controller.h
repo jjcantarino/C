@@ -6,15 +6,7 @@
 #include "formatted_data.h"
 #include "unformatted_data.h"
 
-
-int update_list_entry(rb_tree *, char*, char*, float, int);
-int create_tree_node(char*, rb_tree *);
-int report_error();
-
-int get_average_delay(rb_tree *, char *);
-int get_max_inflight(rb_tree *);
-void * fill_tree(void *);
-int get_max_inflight_recursive(node *, char*, int );
+#define MAX_ROW_READ 10
 
 typedef struct thread_args
  {
@@ -23,17 +15,26 @@ typedef struct thread_args
     char * str2;
     FILE * fp;
     pthread_mutex_t mutex_fp;
-    char ** buffer;
 }thread_args;
 
-
-void *fill_tree(void * arg);
-
-int init_buffer (thread_args *args);
-int clear_buffer (thread_args *args);
-int clean_memory(thread_args *);
 int create_tree(thread_args *);
+//fitxer dades process
+void * fill_tree(void *);
+//fitxer aeroports process
+void *generate_tree(void * );
+
+//P2
+int update_list_entry(rb_tree *, char*, char*, float, int);
+int create_tree_node(char*, rb_tree *);
+
+int clean_memory(thread_args *);
 
 void printids(const char *);
-void *thr_fn(void *);
+
+//P1
+int get_average_delay(rb_tree *, char *);
+int get_max_inflight(rb_tree *);
+int get_max_inflight_recursive(node *, char*, int );
+int report_error();
+
 #endif

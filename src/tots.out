@@ -1,0 +1,51 @@
+controller.c: In function ‘create_tree’:
+controller.c:48:26: warning: implicit declaration of function ‘get_nprocs’ [-Wimplicit-function-declaration]
+     int max_num_thread = get_nprocs();
+                          ^~~~~~~~~~
+controller.c:78:9: warning: return makes integer from pointer without a cast [-Wint-conversion]
+   return((void *)0);
+         ^
+controller.c: In function ‘fill_tree’:
+controller.c:100:12: warning: return makes pointer from integer without a cast [-Wint-conversion]
+     return lines_read;
+            ^~~~~~~~~~
+formatted_data.c: In function ‘dades_process’:
+formatted_data.c:62:9: warning: implicit declaration of function ‘process_row’ [-Wimplicit-function-declaration]
+         process_row(fp, tree, str_array[i]);
+         ^~~~~~~~~~~
+==19950== Memcheck, a memory error detector
+==19950== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==19950== Using Valgrind-3.12.0.SVN and LibVEX; rerun with -h for copyright info
+==19950== Command: ./myprog
+==19950== 
+==19950== 
+==19950== Process terminating with default action of signal 2 (SIGINT)
+==19950==    at 0x54346D0: __read_nocancel (syscall-template.S:84)
+==19950==    by 0x53CCA2F: _IO_file_underflow@@GLIBC_2.2.5 (fileops.c:600)
+==19950==    by 0x53CDB31: _IO_default_uflow (genops.c:413)
+==19950==    by 0x53C1549: _IO_getline_info (iogetline.c:60)
+==19950==    by 0x53C03EA: fgets (iofgets.c:53)
+==19950==    by 0x108E88: menu (main.c:40)
+==19950==    by 0x108F57: main (main.c:77)
+==19950== 
+==19950== HEAP SUMMARY:
+==19950==     in use at exit: 88 bytes in 2 blocks
+==19950==   total heap usage: 4 allocs, 2 frees, 2,136 bytes allocated
+==19950== 
+==19950== 16 bytes in 1 blocks are still reachable in loss record 1 of 2
+==19950==    at 0x4C2BBAF: malloc (vg_replace_malloc.c:299)
+==19950==    by 0x108EE9: main (main.c:65)
+==19950== 
+==19950== 72 bytes in 1 blocks are still reachable in loss record 2 of 2
+==19950==    at 0x4C2BBAF: malloc (vg_replace_malloc.c:299)
+==19950==    by 0x108EC5: main (main.c:64)
+==19950== 
+==19950== LEAK SUMMARY:
+==19950==    definitely lost: 0 bytes in 0 blocks
+==19950==    indirectly lost: 0 bytes in 0 blocks
+==19950==      possibly lost: 0 bytes in 0 blocks
+==19950==    still reachable: 88 bytes in 2 blocks
+==19950==         suppressed: 0 bytes in 0 blocks
+==19950== 
+==19950== For counts of detected and suppressed errors, rerun with: -v
+==19950== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

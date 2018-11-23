@@ -4,7 +4,7 @@
 #include <string.h>
 #include "controller.h"
 #include <pthread.h>
-#define MAX_ROW_READ 100
+
 //Meto de que itera pel fitxer aeroports.csv en busca d'IATAcodes d'aeroports
 //i inserta aquests ISOCodes com a claus d'un arbre
 int aeroports_process(char* filename,rb_tree * tree){
@@ -40,41 +40,28 @@ int aeroports_process(char* filename,rb_tree * tree){
 
 int read_n_file_lines(FILE * fp, pthread_mutex_t mutex_fp, char ** str_array){
 
-    int fgetsout = 0;
-
     int i = 0;
+    char str[100];
+    pthread_mutex_lock(&mutex_fp);  
 
-    pthread_mutex_lock(&mutex_fp);
-    
-    while(fgetsout!=NULL &&  i < MAX_ROW_READ) {
-
-        fgetsout = fgets (str_array[i], 100, fp) != NULL
-
+    while(fgets (str, 100, fp) != NULL && i < MAX_ROW_READ){
+        strcpy(str_array[i], str);  
         i++;
     }
 
     pthread_mutex_unlock(&mutex_fp);
 
-    if(fgetsout==NULL || fp == NULL) return 1;
-    return 0;
+    return i;
 }
 int dades_process(FILE * fp, rb_tree * tree, pthread_mutex_t mutex_fp, char ** str_array){
 
-    int result_read = 0;
+    //while (!feof(...))
+    int num_lines_read = read_n_file_lines(fp, mutex_fp, str_array);
 
-    if (fp != NULL){
-        result_read = read_n_file_lines(fp, mutex_fp, str);
+    for (int i = 0 ; i < num_lines_read ; i++)
+        process_row(fp, tree, str_array[i]);
 
-        for (int i = 0 ; i < str.length ; i++)
-        {
-            process_row(fp, tree, str[i]);
-
-        }
-    }
-    else
-        result_read = 1;
-
-    return result_read;
+    return num_lines_read;
 }
 
 //processa l'arxiu dades.csv corresponent a vols
@@ -147,9 +134,6 @@ int process_row(FILE * fp, rb_tree * tree, char * str){
             }
         }
     }
-
-    //if the process terminated because fgets was null
-    //it means we reached EOF, so we must end threading
 
     return(0);
 }

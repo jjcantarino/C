@@ -7,11 +7,98 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-void *thr_fn(void *arg)
-{
-  printids("nou fil: ");
+
+/*
+    CREATE TREE (FORMATTED DATA, OTHERWISE WOULD BE LOAD)
+
+int create_tree(rb_tree * , char*, char*);
+*/
+
+int create_tree(thread_args *args){
+    
+    FILE *fp;
+    pthread_t * ntids;
+    pthread_t ntid_f2;
+    int i = 0;
+    char str[100];      
+    
+    //INIT TREE
+    init_tree(args->tree);   
+
+    //TREE CREATION
+    aeroports_process(args->str1, args->tree);
+
+    printf("Filename: %s \n", args->str2);
+
+    args->mutex_fp = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+
+    fp = fopen(args->str2 , "r");
+    args->fp = fp;
+    printf("Filename: %s  FP: %d \n", args->str2, args->fp);
+
+    if(args->fp == NULL) {
+        perror("Error opening file");
+        return(-1);
+    }
+    fgets (str, 100, args->fp);//ignorem capçalera
+
+    struct timeval tv1, tv2;
+    gettimeofday(&tv1, NULL);
+
+    int max_num_thread = get_nprocs();
+
+    printf("Nombre of fils secundaries: %d\n", max_num_thread);
+
+    ntids = malloc (max_num_thread * sizeof (pthread_t));
+
+    i = 0;
+    while ( i < get_nprocs()){
+        if(pthread_create(&ntids[i], NULL, fill_tree, args)!=0) return report_error();
+        i++;
+    }
+
+
+    i=0;
+  
+    while ( i < max_num_thread){
+        pthread_join(ntids[i], NULL);
+        i++;
+    }
+
+    /* Tiempo cronologico */
+    gettimeofday(&tv2, NULL);
+
+    /* Tiempo para la creacion del arbol */
+    printf("Tiempo para crear el arbol: %f segundos\n",
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
+
+    fclose(fp);   
+    free(ntids);
+    
   return((void *)0);
 }
+
+void *fill_tree(void * arg){
+
+
+    struct thread_args *args = arg;
+    
+    char ** buffer;
+    int lines_read = 0;
+    
+    buffer = (char **)malloc(MAX_ROW_READ * sizeof(char *));
+
+    for (int i = 0; i < MAX_ROW_READ; i++) buffer[i] = (char *)malloc(100 * sizeof (char));
+
+    while(lines_read = dades_process(args->fp, args->tree, args->mutex_fp, buffer)>0);
+
+    for (int i = 0; i < MAX_ROW_READ; i++) free(buffer[i]);
+    
+    free(buffer);
+
+}
+
 
 void printids(const char *s)
 {
@@ -135,106 +222,12 @@ int get_max_inflight_recursive(node *node, char* airport, int max_times){
 int clean_memory(thread_args *args){
     if(args->tree != NULL)
         delete_tree(args->tree);
-    clean_buffer(args);
+    /*if(args->fp != NULL){
+        fclose(args->fp);
+        args->fp = NULL;
+    }*/
 }
 
-/*
-for aeroports_process
-    while (ret1 != 1 && ret2 != 1){
-        if(pthread_create(&ntid_f1, NULL, fill_tree, args)!=0) return report_error();
-        if(pthread_create(&ntid_f2, NULL, fill_tree, args)!=0) return report_error();
-        pthread_join(ntid_f1, &ret1);
-        pthread_join(ntid_f2, &ret2);
-    }
-*/
-
-int init_buffer (thread_args *args){
-
-    args->buffer = malloc(MAX_ROW_READ * sizeof(char *));
-
-    for (int i = 0; i < MAX_ROW_READ; i++)
-        args->buffer[i] = malloc(101 * sizeof (char));
-}
-
-int clean_buffer (thread_args *args){
-
-    for (int i = 0; i < MAX_ROW_READ; i++)
-        free(args->buffer[i]);
-    
-    free(args->buffer);
-}
-
-/*
-    CREATE TREE (FORMATTED DATA, OTHERWISE WOULD BE LOAD)
-
-int create_tree(rb_tree * , char*, char*);
-*/
-
-int create_tree(thread_args *args){
-    
-    FILE *fp;
-    pthread_t * ntids;
-    void *ret1;
-    void* ret2;
-    int i = 0;
-    char str[100];      
-    printf("TID: %i \n", pthread_self());
-
-    //INIT TREE
-    init_tree(args->tree);   
-
-    //TREE CREATION
-    aeroports_process(args->str1, args->tree);
-
-    printf("Filename: %s \n", args->str2);
-
-    args->mutex_fp = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
-
-    fp = fopen(args->str2 , "r");
-    args->fp = fp;
-    printf("Filename: %s  FP: %d \n", args->str2, args->fp);
-
-    if(args->fp == NULL) {
-        perror("Error opening file");
-        return(-1);
-    }
-    fgets (str, 100, args->fp);//ignorem capçalera
-
-    struct timeval tv1, tv2;
-    gettimeofday(&tv1, NULL);
-    int max_num_thread = get_nprocs();
-    ntids = malloc (max_num_thread * sizeof (pthread_t));
-    while ( args->fp != NULL ){
-        i = 0;
-        while ( i < max_num_thread){
-            if(pthread_create(&ntid_f1, NULL, fill_tree, args)!=0) return report_error();
-            i++;
-        }
-    }
-
-    /* Tiempo cronologico */
-    gettimeofday(&tv2, NULL);
-
-    /* Tiempo para la creacion del arbol */
-    printf("Tiempo para crear el arbol: %f segundos\n",
-            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec));
-
-    fclose(fp);
-   // if(pthread_create(&ntid_f2, NULL, fill_tree, args)!=0) return report_error();
-   
-
-  return((void *)0);
-}
-
-void *fill_tree(void * arg){
-
-
-    struct thread_args *args = arg;
-    //printids("Fil secundari : ");
-    dades_process(args->fp, args->tree, args->mutex_fp, args->buffer);
-
-}
 /*
     GIVEN AN ORIGIN SEARCHS FOR ITS AVERAGE DELAY
 */
