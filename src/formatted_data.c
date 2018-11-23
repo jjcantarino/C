@@ -38,10 +38,48 @@ int aeroports_process(char* filename,rb_tree * tree){
 }
 
 
-//processa l'arxiu dades.csv corresponent a vols
-int dades_process(FILE * fp, rb_tree * tree, pthread_mutex_t mutex_fp){
+int read_n_file_lines(FILE * fp, pthread_mutex_t mutex_fp, char ** str_array){
 
-    char str[100];      
+    int fgetsout = 0;
+
+    int i = 0;
+
+    pthread_mutex_lock(&mutex_fp);
+    
+    while(fgetsout!=NULL &&  i < MAX_ROW_READ) {
+
+        fgetsout = fgets (str_array[i], 100, fp) != NULL
+
+        i++;
+    }
+
+    pthread_mutex_unlock(&mutex_fp);
+
+    if(fgetsout==NULL || fp == NULL) return 1;
+    return 0;
+}
+int dades_process(FILE * fp, rb_tree * tree, pthread_mutex_t mutex_fp, char ** str_array){
+
+    int result_read = 0;
+
+    if (fp != NULL){
+        result_read = read_n_file_lines(fp, mutex_fp, str);
+
+        for (int i = 0 ; i < str.length ; i++)
+        {
+            process_row(fp, tree, str[i]);
+
+        }
+    }
+    else
+        result_read = 1;
+
+    return result_read;
+}
+
+//processa l'arxiu dades.csv corresponent a vols
+int process_row(FILE * fp, rb_tree * tree, char * str){
+
     char * current_origin;
     char * current_dest;
     char * str_delay;
@@ -51,14 +89,8 @@ int dades_process(FILE * fp, rb_tree * tree, pthread_mutex_t mutex_fp){
     int j = 0;
     int begin_word = 0;
     int column = 0;
-    int current_column = 0;
-    int nombre_elements = 0, i = 0;
-    int row = 0;
-    int fgetsout = 0;
     
-    /* Tiempo cronologico */
-    fgetsout = fgets (str, 100, fp);
-    while( fgetsout != NULL &&  row <= MAX_ROW_READ) {
+    if((str != NULL)){
         //convertim a integer
         line_length = strlen(str);                    
         begin_word = 0; 
@@ -114,19 +146,6 @@ int dades_process(FILE * fp, rb_tree * tree, pthread_mutex_t mutex_fp){
                 column++;
             }
         }
-        row++;
-        pthread_mutex_lock(&mutex_fp);
-        if(fp != NULL){
-            fgetsout = fgets (str, 100, fp);
-        }
-        else 
-            fgetsout=NULL;
-
-        if(fgetsout==NULL){
-            pthread_mutex_unlock(&mutex_fp);
-            pthread_exit(1);
-        }
-        pthread_mutex_unlock(&mutex_fp);
     }
 
     //if the process terminated because fgets was null

@@ -135,6 +135,33 @@ int get_max_inflight_recursive(node *node, char* airport, int max_times){
 int clean_memory(thread_args *args){
     if(args->tree != NULL)
         delete_tree(args->tree);
+    clean_buffer(args);
+}
+
+/*
+for aeroports_process
+    while (ret1 != 1 && ret2 != 1){
+        if(pthread_create(&ntid_f1, NULL, fill_tree, args)!=0) return report_error();
+        if(pthread_create(&ntid_f2, NULL, fill_tree, args)!=0) return report_error();
+        pthread_join(ntid_f1, &ret1);
+        pthread_join(ntid_f2, &ret2);
+    }
+*/
+
+int init_buffer (thread_args *args){
+
+    args->buffer = malloc(MAX_ROW_READ * sizeof(char *));
+
+    for (int i = 0; i < MAX_ROW_READ; i++)
+        args->buffer[i] = malloc(101 * sizeof (char));
+}
+
+int clean_buffer (thread_args *args){
+
+    for (int i = 0; i < MAX_ROW_READ; i++)
+        free(args->buffer[i]);
+    
+    free(args->buffer);
 }
 
 /*
@@ -146,7 +173,7 @@ int create_tree(rb_tree * , char*, char*);
 int create_tree(thread_args *args){
     
     FILE *fp;
-    pthread_t ntid_f1, ntid_f2;
+    pthread_t * ntids;
     void *ret1;
     void* ret2;
     int i = 0;
@@ -175,12 +202,14 @@ int create_tree(thread_args *args){
 
     struct timeval tv1, tv2;
     gettimeofday(&tv1, NULL);
-
-    while (ret1 != 1 && ret2 != 1){
-        if(pthread_create(&ntid_f1, NULL, fill_tree, args)!=0) return report_error();
-        if(pthread_create(&ntid_f2, NULL, fill_tree, args)!=0) return report_error();
-        pthread_join(ntid_f1, &ret1);
-        pthread_join(ntid_f2, &ret2);
+    int max_num_thread = get_nprocs();
+    ntids = malloc (max_num_thread * sizeof (pthread_t));
+    while ( args->fp != NULL ){
+        i = 0;
+        while ( i < max_num_thread){
+            if(pthread_create(&ntid_f1, NULL, fill_tree, args)!=0) return report_error();
+            i++;
+        }
     }
 
     /* Tiempo cronologico */
@@ -203,7 +232,7 @@ void *fill_tree(void * arg){
 
     struct thread_args *args = arg;
     //printids("Fil secundari : ");
-    dades_process(args->fp, args->tree, args->mutex_fp);
+    dades_process(args->fp, args->tree, args->mutex_fp, args->buffer);
 
 }
 /*

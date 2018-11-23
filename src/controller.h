@@ -23,9 +23,14 @@ typedef struct thread_args
     char * str2;
     FILE * fp;
     pthread_mutex_t mutex_fp;
+    char ** buffer;
 }thread_args;
 
 
+void *fill_tree(void * arg);
+
+int init_buffer (thread_args *args);
+int clear_buffer (thread_args *args);
 int clean_memory(thread_args *);
 int create_tree(thread_args *);
 
